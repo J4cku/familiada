@@ -1,0 +1,441 @@
+/*
+ * Board (TV) view — LED dot-matrix scoreboard on a night-blue stage.
+ * Everything inside .canvas is laid out on a fixed 1920×1080 stage and scaled to fit.
+ */
+
+/* ------------------------------------------------------------------ stage -- */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 62% 55% at 50% 44%, color-mix(in srgb, var(--stage-600) 70%, transparent), transparent 75%),
+    radial-gradient(ellipse 140% 60% at 50% 115%, var(--stage-950), transparent 70%),
+    linear-gradient(180deg, var(--stage-800), var(--stage-900) 60%, var(--stage-950));
+}
+
+/* faint horizontal raster over the whole stage, like a camera picking up the LED wall */
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 80% at 50% 50%, transparent 55%, color-mix(in srgb, var(--stage-950) 80%, transparent)),
+    repeating-linear-gradient(180deg, transparent 0 3px, color-mix(in srgb, var(--stage-950) 18%, transparent) 3px 4px);
+}
+
+.stage.is-idle {
+  cursor: none;
+}
+
+/* team-colour light washes from the sides */
+.wash {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 58%;
+  pointer-events: none;
+  opacity: 0.32;
+  transition: opacity 500ms var(--ease-out);
+}
+
+.wash--t0 {
+  left: 0;
+  background: radial-gradient(
+    ellipse 75% 85% at 0% 45%,
+    color-mix(in srgb, var(--team-0) 55%, transparent),
+    color-mix(in srgb, var(--team-0) 12%, transparent) 55%,
+    transparent 78%
+  );
+}
+
+.wash--t1 {
+  right: 0;
+  background: radial-gradient(
+    ellipse 75% 85% at 100% 45%,
+    color-mix(in srgb, var(--team-1) 55%, transparent),
+    color-mix(in srgb, var(--team-1) 12%, transparent) 55%,
+    transparent 78%
+  );
+}
+
+.wash.is-lit {
+  opacity: 0.85;
+}
+
+.wash.is-off {
+  opacity: 0.1;
+}
+
+.wash.is-steal {
+  animation: wash-pulse 1000ms ease-in-out infinite;
+}
+
+@keyframes wash-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 50%;
+  z-index: 1;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+}
+
+/* Non-LED elements fade with the screen; LED panels wipe themselves dark. */
+.screen :is(.ui-label, .question-text, .bezel) {
+  animation: board-fade-in 360ms var(--ease-out) both;
+  transition: opacity 300ms var(--ease-out);
+}
+
+.screen.is-leaving :is(.ui-label, .question-text) {
+  opacity: 0;
+}
+
+@keyframes board-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------- panels -- */
+
+.led {
+  position: relative;
+  display: grid;
+  background: var(--led-panel);
+}
+
+.led-layer {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+}
+
+/* dark metal bezel around every LED panel */
+.bezel {
+  --rim: transparent;
+  --rim-glow: transparent;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bezel-shine) 22%, transparent), transparent 9%),
+    linear-gradient(180deg, var(--bezel-edge), var(--bezel) 16%, var(--bezel) 78%, color-mix(in srgb, var(--bezel) 65%, black));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--bezel-shine) 60%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--bezel-edge) 70%, transparent),
+    0 0 0 2px var(--rim),
+    0 0 34px var(--rim-glow),
+    0 20px 50px color-mix(in srgb, black 65%, transparent);
+  transition: box-shadow 400ms var(--ease-out);
+}
+
+/* recessed lip between the bezel and the panel */
+.bezel > .led {
+  border-radius: 3px;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, black 75%, transparent),
+    0 -1px 0 2px color-mix(in srgb, black 40%, transparent);
+}
+
+.bezel--board {
+  padding: 14px;
+  border-radius: 16px;
+}
+
+.bezel--small {
+  padding: 9px;
+}
+
+.bezel--strip {
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.team-block--t0 .bezel--rim,
+.bezel--rim.team-block--t0 {
+  --rim: color-mix(in srgb, var(--team-0) 75%, transparent);
+  --rim-glow: color-mix(in srgb, var(--team-0) 30%, transparent);
+}
+
+.team-block--t1 .bezel--rim,
+.bezel--rim.team-block--t1 {
+  --rim: color-mix(in srgb, var(--team-1) 75%, transparent);
+  --rim-glow: color-mix(in srgb, var(--team-1) 30%, transparent);
+}
+
+.team-block--t0.is-lit .bezel--rim {
+  --rim: var(--team-0);
+  --rim-glow: color-mix(in srgb, var(--team-0) 70%, transparent);
+}
+
+.team-block--t1.is-lit .bezel--rim {
+  --rim: var(--team-1);
+  --rim-glow: color-mix(in srgb, var(--team-1) 70%, transparent);
+}
+
+.team-block.is-steal .bezel--rim::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 3px var(--rim),
+    0 0 46px var(--rim);
+  animation: rim-pulse 1000ms ease-in-out infinite;
+}
+
+@keyframes rim-pulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.ui-label {
+  font: 700 20px/1 var(--font-ui);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------- round screen -- */
+
+.team-block {
+  position: absolute;
+  top: 24px;
+  width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.screen--round .team-block--t0 {
+  left: 48px;
+}
+
+.screen--round .team-block--t1 {
+  right: 48px;
+}
+
+.round-centre {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.round-mult {
+  align-self: flex-start;
+}
+
+.phase-cue {
+  color: var(--accent);
+}
+
+.phase-cue.is-empty {
+  visibility: hidden;
+}
+
+.round-board {
+  position: absolute;
+  top: 258px;
+  left: 50%;
+  translate: -50% 0;
+}
+
+.bezel.is-wrong {
+  --rim: var(--signal);
+}
+
+.board-flash {
+  position: absolute;
+  inset: -4px;
+  border-radius: 20px;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 4px var(--signal),
+    0 0 70px 10px color-mix(in srgb, var(--signal) 55%, transparent);
+  opacity: 0;
+  animation: board-flash 450ms ease-out;
+}
+
+@keyframes board-flash {
+  0% {
+    opacity: 0;
+  }
+  14% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.question {
+  position: absolute;
+  left: 150px;
+  right: 150px;
+  top: 944px;
+  height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.question-text {
+  margin: 0;
+  font: 600 42px/1.22 var(--font-ui);
+  color: var(--text);
+  text-align: center;
+  text-wrap: balance;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-shadow: 0 2px 16px color-mix(in srgb, black 80%, transparent);
+}
+
+/* --------------------------------------------------------- final screen -- */
+
+.final-team,
+.final-player {
+  position: absolute;
+  top: 46px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.final-team {
+  left: 64px;
+  align-items: flex-start;
+}
+
+.final-team .ui-label {
+  font-size: 26px;
+  color: var(--accent);
+}
+
+.final-player {
+  right: 64px;
+  align-items: flex-end;
+}
+
+.final-timer {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  translate: -50% 0;
+}
+
+.final-timer .bezel.is-low {
+  --rim: var(--signal);
+  --rim-glow: color-mix(in srgb, var(--signal) 45%, transparent);
+}
+
+.final-board {
+  position: absolute;
+  top: 262px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.final-columns {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.final-columns .is-active {
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------- title / winner -- */
+
+.title-layout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 64px;
+}
+
+.title-teams {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+}
+
+.title-teams .team-block {
+  position: static;
+  width: auto;
+  flex-direction: column-reverse;
+}
+
+.kontra {
+  color: var(--accent);
+}
+
+/* --------------------------------------------------------------- chrome -- */
+
+.fs-button {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10;
+  padding: 12px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-m);
+  font: 600 15px/1 var(--font-ui);
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface-1) 90%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, black 50%, transparent);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms var(--ease-out);
+}
+
+.fs-button.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fs-button:hover {
+  background: var(--surface-2);
+}
