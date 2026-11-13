@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { finalBoardSum, finalEnteredSum, findMatchingAnswer, matchKey, timerRemainingMs } from '../game/selectors';
-import type { FinalEntry, FinalPlayer, FinalQuestion, TeamIndex, TimerState } from '../game/types';
+import { FINAL_PRIZE, type FinalEntry, type FinalPlayer, type FinalQuestion, type TeamIndex, type TimerState } from '../game/types';
 import { IconPause, IconPlay, IconRepeat, IconReset, IconTrash, IconTrophy } from './icons';
 import { ConfirmButton, NumberField, Segmented } from './ui';
 import { useTicker } from './useHostEffects';
@@ -250,7 +250,7 @@ export function FinalTab(props: TabProps) {
           <IconTrophy size={28} className="banner-icon" />
           <p className="banner-text">
             Finał wygrany! <strong className="team-text">{teamName(state, team)}</strong> —{' '}
-            <span className="num">{boardSum}</span> pkt na tablicy.
+            <span className="num">{boardSum}</span> pkt, czyli <strong className="num">{FINAL_PRIZE}</strong> nagrody.
           </p>
         </section>
       )}

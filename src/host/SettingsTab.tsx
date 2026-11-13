@@ -1,4 +1,4 @@
-import type { Settings } from '../game/types';
+import { FINAL_PRIZE, type Settings } from '../game/types';
 import { IconReset } from './icons';
 import { ConfirmButton, Kbd, NumberField } from './ui';
 import { cx, type TabProps } from './util';
@@ -177,7 +177,7 @@ export function SettingsTab({ state, dispatch }: TabProps) {
           <li>
             <strong>Finał:</strong> dwie osoby, 5 pytań, <span className="num">{settings.finalTimers[0]}</span> s i{' '}
             <span className="num">{settings.finalTimers[1]}</span> s. Razem <span className="num">{settings.finalTarget}</span>{' '}
-            pkt = wygrana. Powtórzona odpowiedź gracza 1 nie liczy się.
+            pkt = wygrana ({FINAL_PRIZE}). Powtórzona odpowiedź gracza 1 nie liczy się.
           </li>
         </ul>
       </aside>

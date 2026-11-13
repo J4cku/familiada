@@ -48,6 +48,39 @@ export const DEFAULT_SETTINGS: Settings = {
 export function sampleQuestions(): QuestionSet {
   return {
     rounds: [
+      newRoundQuestion('Wymień markę szkockiej whisky.', [
+        ['Johnnie Walker', 31],
+        ["Ballantine's", 24],
+        ["Grant's", 15],
+        ['Chivas Regal', 9],
+        ['Glenfiddich', 7],
+        ['Macallan', 5],
+      ]),
+      newRoundQuestion('Wymień postać z serialu „Czterej pancerni i pies”.', [
+        ['Szarik', 33],
+        ['Janek Kos', 24],
+        ['Gustlik', 16],
+        ['Grigorij', 11],
+        ['Marusia', 6],
+        ['Olgierd Jarosz', 4],
+      ]),
+      newRoundQuestion('Wymień film science fiction.', [
+        ['Gwiezdne wojny', 32],
+        ['Matrix', 17],
+        ['Obcy', 12],
+        ['Terminator', 10],
+        ['Avatar', 8],
+        ['Seksmisja', 6],
+        ['Interstellar', 5],
+      ]),
+      newRoundQuestion('Wymień film albo serial Stanisława Barei.', [
+        ['Miś', 38],
+        ['Alternatywy 4', 21],
+        ['Zmiennicy', 12],
+        ['Brunet wieczorową porą', 9],
+        ['Poszukiwany, poszukiwana', 7],
+        ['Nie ma róży bez ognia', 5],
+      ]),
       newRoundQuestion('Co zabierasz ze sobą na plażę?', [
         ['Ręcznik', 34],
         ['Krem do opalania', 22],

@@ -1,5 +1,5 @@
 import { bankValue, currentQuestion, multiplierFor, otherTeam, smallStrikes } from '../game/selectors';
-import { STRIKES_TO_LOSE_CONTROL, type RevealKind, type RoundQuestion, type TeamIndex } from '../game/types';
+import { FINAL_PRIZE, STRIKES_TO_LOSE_CONTROL, type RevealKind, type RoundQuestion, type TeamIndex } from '../game/types';
 import {
   IconArrowRight,
   IconCheck,
@@ -24,7 +24,7 @@ function WinnerBanner({ state, dispatch, onGoToFinal }: TabProps & { onGoToFinal
       <IconTrophy size={28} className="banner-icon" />
       <p className="banner-text">
         <strong className="team-text">{teamName(state, winner)}</strong> — <span className="num">{state.scores[winner]}</span>{' '}
-        pkt. Koniec gry!
+        pkt, czyli <strong className="num">{FINAL_PRIZE}</strong>. Koniec gry!
       </p>
       <div className="banner-actions">
         <button

@@ -89,6 +89,20 @@ export function useScreenTransition(state: GameState): {
   return { view: leaving ? frozen.current : state, key: shownKey, leaving };
 }
 
+/** True once `flag` has stayed true for `ms` (immediately with reduced motion). */
+export function useDelayedFlag(flag: boolean, ms: number): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (!flag) return;
+    const t = window.setTimeout(() => setOn(true), prefersReducedMotion() ? 0 : ms);
+    return () => {
+      window.clearTimeout(t);
+      setOn(false);
+    };
+  }, [flag, ms]);
+  return flag && on;
+}
+
 /* -------------------------------------------------------------- events -- */
 
 export interface BoardFx {

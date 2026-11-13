@@ -1,6 +1,6 @@
 import { finalBoardSum, toBoardText } from '../../game/selectors';
-import { BOARD_TEXT_LIMIT, FINAL_QUESTION_COUNT, type FinalEntry, type GameState } from '../../game/types';
-import { useTimerSeconds, type BoardFx } from '../hooks';
+import { BOARD_TEXT_LIMIT, FINAL_PRIZE, FINAL_QUESTION_COUNT, type FinalEntry, type GameState } from '../../game/types';
+import { useDelayedFlag, useTimerSeconds, type BoardFx } from '../hooks';
 import { fitText, glyphsOf, textDots, textRun } from '../led/context';
 import type { LedCell, LedRun } from '../led/engine';
 import { CHAR_ADVANCE, GLYPH_H, LEADER, LINE_ADVANCE, dividerGlyph } from '../led/font';
@@ -20,6 +20,9 @@ const ROWS = FOOT_Y + GLYPH_H + M;
 const DIVIDER = dividerGlyph(FINAL_QUESTION_COUNT * LINE_ADVANCE - 1);
 const BOARD_BOX = { w: 1700, h: 600 };
 const LOW_TIME_S = 5;
+/** Let WYGRANA blink first, then convert the points into the prize. */
+const CONVERT_DELAY_MS = 1800;
+const PRIZE = toBoardText(FINAL_PRIZE);
 
 const LEAD: LedCell = { glyph: LEADER, tone: 'faint' };
 
@@ -45,6 +48,7 @@ export function FinalScreen({ state, fx }: { state: GameState; fx: BoardFx }) {
   const sum = finalBoardSum(state);
   const won = sum >= settings.finalTarget;
   const digits = Math.max(2, String(secs).length);
+  const converted = useDelayedFlag(won, CONVERT_DELAY_MS);
 
   const runs: LedRun[] = [];
   for (let i = 0; i < FINAL_QUESTION_COUNT; i++) {
@@ -76,18 +80,36 @@ export function FinalScreen({ state, fx }: { state: GameState; fx: BoardFx }) {
         </div>
       </div>
 
-      <div className="final-timer">
-        <div className={`bezel bezel--small${low ? ' is-low' : ''}`}>
-          <LedPanel
-            cols={textDots(digits) + 4}
-            rows={LINE_ADVANCE}
-            width={digits * 100}
-            height={146}
-            runs={[textRun('t', 2, 0, fitText(String(secs), digits, 'right'), { tone: low ? 'red' : 'on', stagger: 0 })]}
-            flash={fx.timerEnd ? { seq: fx.timerEnd, match: ['t'], count: 4 } : null}
-            label={`Pozostało ${secs} s`}
-          />
-        </div>
+      <div className={`final-timer${converted ? ' is-prize' : ''}`}>
+        {converted ? (
+          <>
+            <span className="ui-label">Wygrana</span>
+            <div className="bezel bezel--small">
+              <LedPanel
+                key="prize"
+                cols={textDots(PRIZE.length) + 4}
+                rows={LINE_ADVANCE}
+                width={PRIZE.length * 92}
+                height={134}
+                runs={[textRun('prize', 2, 0, PRIZE)]}
+                celebrate
+                label={`Wygrana: ${FINAL_PRIZE}`}
+              />
+            </div>
+          </>
+        ) : (
+          <div className={`bezel bezel--small${low ? ' is-low' : ''}`}>
+            <LedPanel
+              cols={textDots(digits) + 4}
+              rows={LINE_ADVANCE}
+              width={digits * 100}
+              height={146}
+              runs={[textRun('t', 2, 0, fitText(String(secs), digits, 'right'), { tone: low ? 'red' : 'on', stagger: 0 })]}
+              flash={fx.timerEnd ? { seq: fx.timerEnd, match: ['t'], count: 4 } : null}
+              label={`Pozostało ${secs} s`}
+            />
+          </div>
+        )}
       </div>
 
       <div className="final-player">

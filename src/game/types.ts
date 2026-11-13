@@ -6,6 +6,8 @@ export type FinalPlayer = 1 | 2;
 export const FINAL_QUESTION_COUNT = 5;
 export const MAX_ANSWERS = 8;
 export const STRIKES_TO_LOSE_CONTROL = 3;
+/** What a won final pays out — deliberately the same however many points were scored. */
+export const FINAL_PRIZE = '7,58ZŁ';
 /** Longest answer text (in characters) that fits on the board without truncation. */
 export const BOARD_TEXT_LIMIT = { round: 24, final: 13 } as const;
 
