@@ -1,11 +1,17 @@
-import { useEffect, useMemo, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useBoardGame } from '../game/store';
+import { useSyncStatus } from '../game/remote';
+import type { GameState } from '../game/types';
+import { boardRoomFromHash, isEmbedded } from '../routes';
 import { useTeamColors } from '../theme';
+import { BoardWaiting, ConnectionBadge, RoomEntry, SoundHint } from './Connect';
 import {
   STAGE_H,
   STAGE_W,
   resolveScreen,
   useBoardFx,
+  useBoardSound,
+  useDelayedFlag,
   useFullscreen,
   useIdle,
   useScreenTransition,
@@ -24,14 +30,6 @@ const LIVE: LedMotion = { leaving: false };
 const LEAVING: LedMotion = { leaving: true };
 const CHROME_IDLE_MS = 2500;
 
-function isEmbedded(): boolean {
-  try {
-    return window.self !== window.top;
-  } catch {
-    return true;
-  }
-}
-
 function usePalette(teamColors: readonly [string, string]): LedPalette {
   const [team0, team1] = teamColors;
   return useMemo(() => {
@@ -49,16 +47,38 @@ function usePalette(teamColors: readonly [string, string]): LedPalette {
   }, [team0, team1]);
 }
 
+/** Board route: `#/tablica/<code>` shows that room; `#/tablica` asks for the code. */
 export default function Board() {
-  const live = useBoardGame();
+  const [room, setRoom] = useState(boardRoomFromHash);
+  useEffect(() => {
+    const onHash = () => setRoom(boardRoomFromHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  if (!room) return <RoomEntry />;
+  return <BoardRoom key={room} room={room} />;
+}
+
+function BoardRoom({ room }: { room: string }) {
+  const embedded = isEmbedded();
+  // The host's preview iframe is fed by the host window itself; only real boards poll the server.
+  const { state, ready } = useBoardGame(room, !embedded);
+  const status = useSyncStatus();
+  // One failed poll is noise; only a lasting outage is worth a badge on the TV.
+  const offline = useDelayedFlag(!embedded && status === 'offline', 3000);
+  if (!ready) return <BoardWaiting room={room} status={embedded ? 'connecting' : status} />;
+  return <BoardStage live={state} embedded={embedded} offline={offline} />;
+}
+
+function BoardStage({ live, embedded, offline }: { live: GameState; embedded: boolean; offline: boolean }) {
   useTeamColors(live.settings.teamColors);
+  const needsSoundClick = useBoardSound(live.event, live.final.timer, live.settings.sound === 'board' && !embedded);
   const palette = usePalette(live.settings.teamColors);
   const fx = useBoardFx(live);
   const { view, key, leaving } = useScreenTransition(live);
   const scale = useStageScale();
   const idle = useIdle(CHROME_IDLE_MS);
   const fullscreen = useFullscreen();
-  const embedded = isEmbedded();
   const screen = resolveScreen(view);
   const washes = stageWashes(view, screen);
 
@@ -103,6 +123,8 @@ export default function Board() {
           </LedPaletteContext.Provider>
         </StageScaleContext.Provider>
       </div>
+      {needsSoundClick && <SoundHint />}
+      {offline && <ConnectionBadge />}
       {embedded ? null : (
         <button
           type="button"

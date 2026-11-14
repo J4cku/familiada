@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { activeTeam, currentQuestion, timerRemainingMs } from '../game/selectors';
+import { syncedNow } from '../game/remote';
+import { playEvent, unlockAudio } from '../game/sound';
 import type { GameEvent, GameState, TeamIndex, TimerState } from '../game/types';
 import type { TeamStatus } from './parts/TeamBlock';
 import { prefersReducedMotion } from './led/engine';
@@ -20,7 +22,8 @@ export function useStageScale(): number {
 }
 
 function fitScale(): number {
-  return Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
+  // A hidden preview iframe has no size; never let the scale reach 0 (0/0 sizes).
+  return Math.max(0.05, Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H));
 }
 
 /* ------------------------------------------------------------- screens -- */
@@ -175,11 +178,60 @@ export function useBoardFx(state: GameState): BoardFx {
   return fx;
 }
 
+/* --------------------------------------------------------------- sound -- */
+
+/**
+ * Plays game sounds on this board when the host routes sound here. Browsers
+ * need one click/key on this device before audio may start; until then the
+ * returned flag asks the board to show a hint.
+ */
+export function useBoardSound(event: GameEvent | null, timer: TimerState, enabled: boolean): boolean {
+  const [unlocked, setUnlocked] = useState(false);
+  const lastSeen = useRef(event?.seq ?? 0);
+  const localTimerEndAt = useRef(0);
+
+  // Buzz the moment this board's own countdown hits zero; the host's 'timer-end'
+  // update arrives a moment later and is then skipped.
+  useEffect(() => {
+    if (!enabled || !unlocked || timer.startedAt === null) return;
+    const ms = timerRemainingMs(timer, syncedNow());
+    if (ms <= 0) return;
+    const t = window.setTimeout(() => {
+      localTimerEndAt.current = Date.now();
+      playEvent('timer-end');
+    }, ms);
+    return () => window.clearTimeout(t);
+  }, [timer, enabled, unlocked]);
+
+  useEffect(() => {
+    if (!enabled || unlocked) return;
+    const unlock = () => {
+      unlockAudio();
+      setUnlocked(true);
+    };
+    window.addEventListener('pointerdown', unlock, true);
+    window.addEventListener('keydown', unlock, true);
+    return () => {
+      window.removeEventListener('pointerdown', unlock, true);
+      window.removeEventListener('keydown', unlock, true);
+    };
+  }, [enabled, unlocked]);
+
+  useEffect(() => {
+    if (!event || event.seq <= lastSeen.current) return;
+    lastSeen.current = event.seq;
+    if (event.kind === 'timer-end' && Date.now() - localTimerEndAt.current < 5000) return;
+    if (enabled && unlocked) playEvent(event.kind);
+  }, [event, enabled, unlocked]);
+
+  return enabled && !unlocked;
+}
+
 /* --------------------------------------------------------------- timer -- */
 
 /** Whole seconds left on the final timer (ceil), ticking while it runs. */
 export function useTimerSeconds(timer: TimerState): number {
-  const read = useCallback(() => Math.ceil(timerRemainingMs(timer, Date.now()) / 1000), [timer]);
+  const read = useCallback(() => Math.ceil(timerRemainingMs(timer, syncedNow()) / 1000), [timer]);
   const [secs, setSecs] = useState(read);
 
   useEffect(() => {

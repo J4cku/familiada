@@ -452,3 +452,128 @@
 .fs-button:hover {
   background: var(--surface-2);
 }
+
+/* ---------------------------------------------- connect / waiting -- */
+
+.connect {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(60vw 60vh at 0% 50%, color-mix(in srgb, var(--team-0) 18%, transparent), transparent 70%),
+    radial-gradient(60vw 60vh at 100% 50%, color-mix(in srgb, var(--team-1) 18%, transparent), transparent 70%),
+    var(--stage-900);
+  font-family: var(--font-ui);
+}
+
+.connect-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(520px, 100%);
+  padding: 40px 36px;
+  border: 1px solid var(--bezel-edge);
+  border-radius: var(--radius-l);
+  background: var(--bezel);
+  box-shadow: 0 24px 60px color-mix(in srgb, black 60%, transparent);
+  text-align: center;
+}
+
+.connect-title {
+  margin: 0;
+  font: 400 40px/1 var(--font-marquee);
+  color: var(--led-on);
+}
+
+.connect-label {
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+.connect-input,
+.connect-code {
+  width: 100%;
+  margin: 0;
+  padding: 14px 18px;
+  border: 2px solid var(--bezel-edge);
+  border-radius: var(--radius-m);
+  background: var(--led-panel);
+  color: var(--led-on);
+  font: 700 48px/1 var(--font-flap);
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 0 14px var(--led-glow);
+}
+
+.connect-input::placeholder {
+  color: color-mix(in srgb, var(--text-faint) 45%, transparent);
+  text-shadow: none;
+}
+
+.connect-input:focus-visible {
+  outline: none;
+  border-color: var(--led-on);
+}
+
+.connect-help,
+.connect-error {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.connect-error {
+  color: var(--signal);
+}
+
+.connect-button {
+  margin-top: 6px;
+  padding: 14px 36px;
+  border: 0;
+  border-radius: var(--radius-m);
+  background: var(--accent);
+  color: var(--stage-950);
+  font: 700 18px/1 var(--font-ui);
+  cursor: pointer;
+}
+
+.connect-link {
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.board-pill {
+  position: fixed;
+  left: 50%;
+  z-index: 10;
+  translate: -50% 0;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font: 600 18px/1.2 var(--font-ui);
+  box-shadow: 0 8px 24px color-mix(in srgb, black 50%, transparent);
+  pointer-events: none;
+}
+
+.board-pill--sound {
+  bottom: 28px;
+  background: var(--accent);
+  color: var(--stage-950);
+  animation: pill-pulse 1.6s ease-in-out infinite;
+}
+
+.board-pill--offline {
+  top: 20px;
+  background: color-mix(in srgb, var(--signal) 85%, black);
+  color: white;
+}
+
+@keyframes pill-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}

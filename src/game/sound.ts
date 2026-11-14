@@ -2,11 +2,10 @@ import type { GameEventKind } from './types';
 
 /**
  * All sounds are synthesised with Web Audio — no audio files to ship or license.
- * Sounds play in the host window (the one that has had a user gesture), which is
- * usually the laptop wired to the TV, so they come out of the same speakers.
+ * Which device plays them is a game setting (`settings.sound`): by default the
+ * board, so they come out of the TV's speakers. Browsers only allow audio after
+ * a user gesture on that device — see unlockAudio().
  */
-
-const MUTE_KEY = 'sto-glosow:muted';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -21,25 +20,6 @@ function audio(): { ctx: AudioContext; out: GainNode } | null {
   }
   if (ctx.state === 'suspended') void ctx.resume();
   return { ctx, out: master! };
-}
-
-let mutedFallback = false;
-
-export function isMuted(): boolean {
-  try {
-    return localStorage.getItem(MUTE_KEY) === '1';
-  } catch {
-    return mutedFallback;
-  }
-}
-
-export function setMuted(muted: boolean) {
-  mutedFallback = muted;
-  try {
-    localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
-  } catch {
-    // storage blocked — the in-memory flag still applies
-  }
 }
 
 /** Call from a click handler once so browsers allow audio later. */
@@ -104,7 +84,6 @@ const E6 = 1318.5;
 const G6 = 1568;
 
 export function playEvent(kind: GameEventKind) {
-  if (isMuted()) return;
   switch (kind) {
     case 'reveal':
       scan(0, 8, 0.028);

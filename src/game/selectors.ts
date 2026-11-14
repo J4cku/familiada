@@ -93,3 +93,22 @@ export function findMatchingAnswer(question: FinalQuestion | RoundQuestion, type
   if (!key) return null;
   return question.answers.find((a) => matchKey(a.text) === key) ?? null;
 }
+
+/**
+ * What a board needs, and nothing more: answers stay hidden until revealed, and
+ * other rounds and the final's survey answers are blanked. Sent to the server so
+ * the room's public data can't be used to peek at answers.
+ */
+export function boardProjection(state: GameState): GameState {
+  const { round } = state;
+  const rounds = state.questions.rounds.map((q, i) => {
+    if (i !== round.index) return { ...q, question: '', answers: [] };
+    return {
+      ...q,
+      question: round.showQuestion ? q.question : '',
+      answers: q.answers.map((a) => (round.revealed[a.id] ? a : { id: a.id, text: '', points: 0 })),
+    };
+  });
+  const final = state.questions.final.map((q) => ({ ...q, question: '', answers: [] }));
+  return { ...state, questions: { rounds, final } };
+}

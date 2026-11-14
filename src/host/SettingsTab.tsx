@@ -1,11 +1,79 @@
+import { useState } from 'react';
+import type { SyncStatus } from '../game/remote';
 import { FINAL_PRIZE, type Settings } from '../game/types';
+import { absoluteBoardUrl } from '../routes';
 import { IconReset } from './icons';
 import { ConfirmButton, Kbd, NumberField } from './ui';
 import { cx, type TabProps } from './util';
 
-const TEAM_SIDE = ['lewa strona, turkus', 'prawa strona, róż'] as const;
+const TEAM_SIDE = ['lewa strona', 'prawa strona'] as const;
 
-export function SettingsTab({ state, dispatch }: TabProps) {
+const SYNC_TEXT: Record<SyncStatus, string> = {
+  connecting: 'Łączę z serwerem…',
+  online: 'Połączono z serwerem — tablica na innym urządzeniu dostaje każdą zmianę.',
+  waiting: 'Połączono z serwerem.',
+  offline: 'Brak połączenia z serwerem. Zmiany zostaną wysłane, gdy wróci internet.',
+  'no-storage': 'Serwer działa, ale nie ma bazy. W Vercel: Storage → Upstash Redis → podłącz do projektu i zrób redeploy.',
+  'no-server': 'Ten adres nie ma serwera synchronizacji — tablica zadziała tylko w tej samej przeglądarce.',
+};
+
+interface RemoteBoardProps {
+  room: string;
+  sync: SyncStatus;
+  onNewRoom: () => void;
+}
+
+/** How to connect a board on another device (laptop + TV) to this panel. */
+function RemoteBoard({ room, sync, onNewRoom }: RemoteBoardProps) {
+  const url = absoluteBoardUrl(room);
+  const [copied, setCopied] = useState(false);
+  return (
+    <section className="panel remote-panel" aria-labelledby="remote-title">
+      <h2 id="remote-title" className="section-title">
+        Tablica na innym urządzeniu
+      </h2>
+      <p className="remote-code">
+        <span className="eyebrow">Kod gry</span>
+        <span className="num remote-code-value">{room}</span>
+      </p>
+      <p className={`remote-status is-${sync}`}>
+        <span className="sync-dot" aria-hidden="true" /> {SYNC_TEXT[sync]}
+      </p>
+      <ol className="help-list">
+        <li>
+          Na laptopie podłączonym do telewizora otwórz adres:
+          <span className="remote-url">
+            <code>{url}</code>
+            <button
+              type="button"
+              className="btn btn-quiet btn-sm"
+              onClick={() => {
+                navigator.clipboard
+                  ?.writeText(url)
+                  .then(() => {
+                    setCopied(true);
+                    window.setTimeout(() => setCopied(false), 2000);
+                  })
+                  .catch(() => setCopied(false));
+              }}
+            >
+              {copied ? 'Skopiowano' : 'Kopiuj'}
+            </button>
+          </span>
+          albo wejdź na <code>{absoluteBoardUrl()}</code> i wpisz kod <strong className="num">{room}</strong>.
+        </li>
+        <li>
+          Kliknij raz w tablicę (to włącza dźwięk) i naciśnij <Kbd>F</Kbd>, żeby przejść na pełny ekran.
+        </li>
+      </ol>
+      <ConfirmButton className="btn btn-quiet" confirmLabel="Na pewno? Tablica musi wpisać nowy kod" onConfirm={onNewRoom}>
+        Wygeneruj nowy kod
+      </ConfirmButton>
+    </section>
+  );
+}
+
+export function SettingsTab({ state, dispatch, ...remote }: TabProps & RemoteBoardProps) {
   const { settings } = state;
   const update = (patch: Partial<Settings>) => dispatch({ type: 'settings/update', patch });
 
@@ -141,18 +209,23 @@ export function SettingsTab({ state, dispatch }: TabProps) {
         </div>
       </section>
 
+      <RemoteBoard {...remote} />
+
       <aside className="panel help-panel" aria-labelledby="help-title">
         <h2 id="help-title" className="section-title">
           Jak grać
         </h2>
         <h3 className="help-subtitle">Przygotowanie</h3>
         <ol className="help-list">
-          <li>Podłącz laptopa do telewizora (np. HDMI) i ustaw ekran jako rozszerzony.</li>
           <li>
-            Kliknij <strong>„Otwórz tablicę”</strong>, przeciągnij nowe okno na telewizor i naciśnij <Kbd>F</Kbd> albo
-            „Pełny ekran”.
+            <strong>Dwa urządzenia</strong> (np. tablet + laptop przy telewizorze): na laptopie otwórz tablicę z kodem
+            gry — instrukcja powyżej. Ten panel zostaje na tablecie.
           </li>
-          <li>Ten panel zostaje na laptopie — tylko ty widzisz tu odpowiedzi. Dźwięk gra z laptopa.</li>
+          <li>
+            <strong>Jedno urządzenie:</strong> kliknij „Otwórz tablicę”, przeciągnij okno na telewizor i naciśnij{' '}
+            <Kbd>F</Kbd>.
+          </li>
+          <li>Dźwięk domyślnie gra na tablicy (głośniki telewizora) — zmienisz to w nagłówku panelu.</li>
         </ol>
         <h3 className="help-subtitle">Zasady w skrócie</h3>
         <ul className="help-list">

@@ -43,6 +43,7 @@ export const DEFAULT_SETTINGS: Settings = {
   finalTarget: 200,
   finalTimers: [15, 20],
   showQuestionOnBoard: true,
+  sound: 'board',
 };
 
 export function sampleQuestions(): QuestionSet {

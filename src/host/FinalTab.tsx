@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { finalBoardSum, finalEnteredSum, findMatchingAnswer, matchKey, timerRemainingMs } from '../game/selectors';
+import { syncedNow } from '../game/remote';
 import { FINAL_PRIZE, type FinalEntry, type FinalPlayer, type FinalQuestion, type TeamIndex, type TimerState } from '../game/types';
 import { IconPause, IconPlay, IconRepeat, IconReset, IconTrash, IconTrophy } from './icons';
 import { ConfirmButton, NumberField, Segmented } from './ui';
@@ -50,7 +51,7 @@ function StartFinal({ state, dispatch }: TabProps) {
 function TimerControl({ timer, dispatch }: { timer: TimerState; dispatch: Dispatch }) {
   const running = timer.startedAt !== null;
   useTicker(running);
-  const ms = timerRemainingMs(timer, Date.now());
+  const ms = timerRemainingMs(timer, syncedNow());
   const seconds = Math.ceil(ms / 1000);
   const fraction = timer.durationMs > 0 ? Math.min(1, ms / timer.durationMs) : 0;
   const over = ms <= 0;
@@ -70,7 +71,7 @@ function TimerControl({ timer, dispatch }: { timer: TimerState; dispatch: Dispat
           type="button"
           className="btn btn-primary"
           disabled={running || over}
-          onClick={() => dispatch({ type: 'timer/start', at: Date.now() })}
+          onClick={() => dispatch({ type: 'timer/start', at: syncedNow() })}
         >
           <IconPlay /> Start
         </button>
@@ -78,7 +79,7 @@ function TimerControl({ timer, dispatch }: { timer: TimerState; dispatch: Dispat
           type="button"
           className="btn"
           disabled={!running}
-          onClick={() => dispatch({ type: 'timer/pause', at: Date.now() })}
+          onClick={() => dispatch({ type: 'timer/pause', at: syncedNow() })}
         >
           <IconPause /> Pauza
         </button>

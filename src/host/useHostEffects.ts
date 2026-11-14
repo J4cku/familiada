@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef } from 'react';
+import { syncedNow } from '../game/remote';
 import { timerRemainingMs } from '../game/selectors';
 import { playEvent, unlockAudio } from '../game/sound';
 import type { GameEvent, TimerState } from '../game/types';
@@ -8,14 +9,14 @@ import type { Dispatch } from './util';
  * Plays a sound for every new game event. "Last seen" starts at the event
  * present on the first render, so reloading the panel never replays anything.
  */
-export function useEventSounds(event: GameEvent | null, isActive: () => boolean) {
+export function useEventSounds(event: GameEvent | null, isActive: () => boolean, enabled: boolean) {
   const lastSeen = useRef(event?.seq ?? 0);
   useEffect(() => {
     if (!event || event.seq <= lastSeen.current) return;
     lastSeen.current = event.seq;
-    // Another open host tab made this change and plays the sound itself.
-    if (isActive()) playEvent(event.kind);
-  }, [event, isActive]);
+    // Sound may be routed to the board; another open host tab plays its own changes.
+    if (enabled && isActive()) playEvent(event.kind);
+  }, [event, isActive, enabled]);
 }
 
 /** Browsers only allow audio after a user gesture: unlock on the first one. */
@@ -41,7 +42,7 @@ export function useTimerDriver(timer: TimerState, dispatch: Dispatch, isActive: 
     if (timer.startedAt === null) return;
     let fired = false;
     const check = () => {
-      if (fired || !isActive() || timerRemainingMs(timer, Date.now()) > 0) return;
+      if (fired || !isActive() || timerRemainingMs(timer, syncedNow()) > 0) return;
       fired = true;
       dispatch({ type: 'timer/expire' });
     };

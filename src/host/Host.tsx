@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { currentQuestion } from '../game/selectors';
-import { isMuted, setMuted } from '../game/sound';
+import { useHostRoom, useSyncStatus } from '../game/remote';
 import { useHostGame } from '../game/store';
+import type { SoundTarget } from '../game/types';
 import { boardUrl } from '../routes';
 import { useTeamColors } from '../theme';
 import { FinalTab } from './FinalTab';
@@ -17,14 +18,15 @@ import './host.css';
 const ANSWER_KEYS = /^[1-8]$/;
 
 export default function Host() {
-  const { state, dispatch, undo, canUndo, isActive } = useHostGame();
+  const { state, dispatch, undo, canUndo, isActive, newRoom } = useHostGame();
+  const room = useHostRoom();
+  const sync = useSyncStatus();
   const [tab, setTab] = useState<Tab>(initialTab);
-  const [muted, setMutedState] = useState(isMuted);
-  // Computed once so the preview iframe never reloads.
-  const [boardSrc] = useState(boardUrl);
+  // Recomputed only when the code changes, so the preview iframe never reloads needlessly.
+  const boardSrc = boardUrl(room.id);
 
   useTeamColors(state.settings.teamColors);
-  useEventSounds(state.event, isActive);
+  useEventSounds(state.event, isActive, state.settings.sound === 'host');
   useAudioUnlock();
   useTimerDriver(state.final.timer, dispatch, isActive);
 
@@ -113,22 +115,31 @@ export default function Host() {
           >
             <IconUndo /> Cofnij
           </button>
+          <label className={cx('btn btn-quiet sound-select', state.settings.sound === 'off' && 'is-muted')}>
+            {state.settings.sound === 'off' ? <IconSoundOff /> : <IconSoundOn />}
+            <span className="visually-hidden">Gdzie grają dźwięki</span>
+            <select
+              value={state.settings.sound}
+              onChange={(e) => dispatch({ type: 'settings/update', patch: { sound: e.target.value as SoundTarget } })}
+            >
+              <option value="board">Dźwięk: tablica</option>
+              <option value="host">Dźwięk: ten panel</option>
+              <option value="off">Dźwięk: wyłączony</option>
+            </select>
+          </label>
           <button
             type="button"
-            className={cx('btn btn-quiet', muted && 'is-muted')}
-            aria-pressed={!muted}
-            onClick={() => {
-              setMuted(!muted);
-              setMutedState(!muted);
-            }}
+            className={cx('btn btn-quiet room-chip', `is-${sync}`)}
+            onClick={() => selectTab('settings')}
+            title="Kod do połączenia tablicy na innym urządzeniu — szczegóły w Ustawieniach"
           >
-            {muted ? <IconSoundOff /> : <IconSoundOn />}
-            Dźwięk {muted ? 'wył.' : 'wł.'}
+            <span className="sync-dot" aria-hidden="true" />
+            Kod: <span className="num">{room.id}</span>
           </button>
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => window.open(boardUrl(), 'sto-glosow-tablica', 'popup,width=1280,height=720')}
+            onClick={() => window.open(boardSrc, 'sto-glosow-tablica', 'popup,width=1280,height=720')}
           >
             <IconScreen /> Otwórz tablicę
           </button>
@@ -140,7 +151,7 @@ export default function Host() {
           {tab === 'game' && <GameTab {...props} onGoToFinal={() => selectTab('final')} />}
           {tab === 'final' && <FinalTab {...props} />}
           {tab === 'questions' && <QuestionsTab {...props} />}
-          {tab === 'settings' && <SettingsTab {...props} />}
+          {tab === 'settings' && <SettingsTab {...props} room={room.id} sync={sync} onNewRoom={newRoom} />}
         </main>
         <Sidebar {...props} boardSrc={boardSrc} hidden={!withSidebar} />
       </div>

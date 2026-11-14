@@ -375,3 +375,20 @@ describe('review fixes', () => {
     expect(s.final.timer.remainingMs).toBe(15000);
   });
 });
+
+describe('board projection', () => {
+  it('hides unrevealed answers and other rounds, keeps what the board shows', async () => {
+    const { boardProjection } = await import('./selectors');
+    let s = run(game(), { type: 'round/start', index: 1 }, { type: 'round/giveControl', team: 0 });
+    const [a, b] = ids(s);
+    s = run(s, { type: 'round/reveal', answerId: a });
+    const p = restoreState(JSON.parse(JSON.stringify(boardProjection(s))));
+    const q = p.questions.rounds[1];
+    expect(q.answers.find((x) => x.id === a)).toMatchObject({ text: 'A', points: 40 });
+    expect(q.answers.find((x) => x.id === b)).toMatchObject({ text: '', points: 0 });
+    expect(p.questions.rounds[0].answers).toEqual([]);
+    expect(p.questions.final.every((f) => f.answers.length === 0)).toBe(true);
+    expect(p.round.bank).toBe(40);
+    expect(p.round.multiplier).toBe(s.round.multiplier);
+  });
+});

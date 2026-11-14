@@ -49,7 +49,11 @@ export interface Settings {
   finalTimers: [number, number];
   /** Whether a new round starts with the question visible on the board. */
   showQuestionOnBoard: boolean;
+  /** Which device plays the sounds: the board (TV speakers), the host panel, or none. */
+  sound: SoundTarget;
 }
+
+export type SoundTarget = 'board' | 'host' | 'off';
 
 /** What the board is currently displaying. */
 export type Screen = 'title' | 'round' | 'final' | 'winner';

@@ -112,6 +112,7 @@ function parseSettings(raw: unknown): Settings {
     finalTimers: [num(timers[0], DEFAULT_SETTINGS.finalTimers[0]), num(timers[1], DEFAULT_SETTINGS.finalTimers[1])],
     showQuestionOnBoard:
       typeof s.showQuestionOnBoard === 'boolean' ? s.showQuestionOnBoard : DEFAULT_SETTINGS.showQuestionOnBoard,
+    sound: s.sound === 'host' || s.sound === 'off' || s.sound === 'board' ? s.sound : DEFAULT_SETTINGS.sound,
   };
 }
 
