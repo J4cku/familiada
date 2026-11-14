@@ -4,6 +4,7 @@ import {
   type FinalQuestion,
   type FinalState,
   type GameState,
+  type MultiplierSetting,
   type QuestionSet,
   type RoundQuestion,
   type RoundState,
@@ -23,8 +24,12 @@ function answers(seeds: AnswerSeed[]): Answer[] {
   return seeds.map(([text, points]) => ({ id: makeId(), text, points }));
 }
 
-export function newRoundQuestion(question = '', seeds: AnswerSeed[] = []): RoundQuestion {
-  return { id: makeId(), question, answers: answers(seeds), multiplier: 'auto' };
+export function newRoundQuestion(
+  question = '',
+  seeds: AnswerSeed[] = [],
+  multiplier: MultiplierSetting = 'auto',
+): RoundQuestion {
+  return { id: makeId(), question, answers: answers(seeds), multiplier };
 }
 
 export function newFinalQuestion(question = '', seeds: AnswerSeed[] = []): FinalQuestion {
@@ -54,8 +59,8 @@ export function sampleQuestions(): QuestionSet {
         ["Ballantine's", 24],
         ["Grant's", 15],
         ['Chivas Regal', 9],
-        ['Glenfiddich', 7],
-        ['Macallan', 5],
+        ['Jura', 7],
+        ['Lagavulin', 5],
       ]),
       newRoundQuestion('Wymień postać z serialu „Czterej pancerni i pies”.', [
         ['Szarik', 33],
@@ -64,6 +69,7 @@ export function sampleQuestions(): QuestionSet {
         ['Grigorij', 11],
         ['Marusia', 6],
         ['Olgierd Jarosz', 4],
+        ['Mirosław Juzenków', 1],
       ]),
       newRoundQuestion('Wymień film science fiction.', [
         ['Gwiezdne wojny', 32],
@@ -72,7 +78,6 @@ export function sampleQuestions(): QuestionSet {
         ['Terminator', 10],
         ['Avatar', 8],
         ['Seksmisja', 6],
-        ['Interstellar', 5],
       ]),
       newRoundQuestion('Wymień film albo serial Stanisława Barei.', [
         ['Miś', 38],
@@ -81,14 +86,11 @@ export function sampleQuestions(): QuestionSet {
         ['Brunet wieczorową porą', 9],
         ['Poszukiwany, poszukiwana', 7],
         ['Nie ma róży bez ognia', 5],
-      ]),
-      newRoundQuestion('Co zabierasz ze sobą na plażę?', [
-        ['Ręcznik', 34],
-        ['Krem do opalania', 22],
-        ['Okulary przeciwsłoneczne', 14],
-        ['Parasol', 11],
-        ['Książkę', 8],
-        ['Picie', 6],
+      ], 2),
+      newRoundQuestion('Więcej niż jedno zwierzę to...?', [
+        ['Owca', 45],
+        ['Lama', 35],
+        ['Wataha', 15],
       ]),
       newRoundQuestion('Wymień coś, co zwykle jest w lodówce.', [
         ['Mleko', 30],
@@ -96,7 +98,6 @@ export function sampleQuestions(): QuestionSet {
         ['Jajka', 16],
         ['Ser', 12],
         ['Wędlina', 9],
-        ['Piwo', 7],
       ]),
       newRoundQuestion('Z czym kojarzy ci się zima?', [
         ['Śnieg', 41],
@@ -139,40 +140,40 @@ export function sampleQuestions(): QuestionSet {
       ]),
     ],
     final: [
-      newFinalQuestion('Wymień czerwony owoc.', [
-        ['Truskawka', 38],
-        ['Jabłko', 24],
-        ['Wiśnia', 15],
-        ['Malina', 11],
-        ['Czereśnia', 7],
+      newFinalQuestion('Co można spotkać podczas spaceru po lesie?', [
+        ['Grzyby', 35],
+        ['Sarnę', 25],
+        ['Dzika', 12],
+        ['Drzewa', 12],
+        ['Wiewiórkę', 10],
       ]),
-      newFinalQuestion('Ile godzin na dobę śpi przeciętny dorosły?', [
-        ['8 godzin', 44],
-        ['7 godzin', 23],
-        ['6 godzin', 15],
-        ['9 godzin', 8],
-        ['10 godzin', 4],
+      newFinalQuestion('Co kierowca zawsze powinien mieć w samochodzie?', [
+        ['Prawo jazdy', 32],
+        ['Apteczkę', 24],
+        ['Gaśnicę', 12],
+        ['Trójkąt', 12],
+        ['Koło zapasowe', 11],
       ]),
-      newFinalQuestion('Wymień coś, co ma klawisze.', [
-        ['Klawiatura', 40],
-        ['Pianino', 31],
-        ['Telefon', 12],
-        ['Akordeon', 7],
-        ['Pilot', 6],
+      newFinalQuestion('Co najczęściej uprawia się w przydomowym ogródku?', [
+        ['Pomidory', 36],
+        ['Ogórki', 22],
+        ['Marchewkę', 17],
+        ['Sałatę', 12],
+        ['Rzodkiewkę', 8],
       ]),
-      newFinalQuestion('Dokąd Polacy jeżdżą na wakacje?', [
-        ['Nad morze', 46],
-        ['W góry', 25],
-        ['Za granicę', 14],
-        ['Nad jezioro', 8],
-        ['Na wieś', 4],
+      newFinalQuestion('Co ludzie najczęściej kupują przed seansem w kinie?', [
+        ['Popcorn', 45],
+        ['Napój', 25],
+        ['Nachosy', 15],
+        ['Bilet', 8],
+        ['Cukierki', 5],
       ]),
-      newFinalQuestion('Wymień kolor, który często jest na flagach.', [
-        ['Czerwony', 35],
-        ['Biały', 30],
-        ['Niebieski', 18],
-        ['Zielony', 9],
-        ['Żółty', 5],
+      newFinalQuestion('Co solenizant chciałby dostać na urodziny?', [
+        ['Święty spokój', 35],
+        ['Pieniądze', 25],
+        ['Niespodziankę', 15],
+        ['Wycieczkę', 11],
+        ['Alkohol', 10],
       ]),
     ],
   };
